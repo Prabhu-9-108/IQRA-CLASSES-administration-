@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IQRA Classes Management System</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Reports -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Mobile sidebar transition */
+        .sidebar-transition {
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-slate-800 font-sans antialiased overflow-hidden h-screen flex">
+
+    <!-- Mobile Header -->
+    <div class="md:hidden fixed w-full bg-white z-50 border-b border-gray-200 flex justify-between items-center p-4">
+        <h1 class="text-xl font-bold text-blue-700 flex items-center gap-2">
+            <i class="fa-solid fa-book-open"></i> IQRA Classes
+        </h1>
+        <button onclick="toggleSidebar()" class="text-gray-600 hover:text-blue-700 focus:outline-none">
+            <i class="fa-solid fa-bars text-2xl"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="bg-slate-900 text-white w-64 flex-shrink-0 fixed md:static h-full z-40 transform -translate-x-full md:translate-x-0 sidebar-transition flex flex-col justify-between shadow-xl">
+        <div>
+            <div class="p-6 flex items-center gap-3 border-b border-slate-700">
+                <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">IQRA</h1>
+                    <p class="text-xs text-slate-400 uppercase tracking-wider">Management</p>
+                </div>
+            </div>
+
+            <nav class="mt-6 px-3 space-y-1">
+                <button onclick="router('dashboard')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-colors hover:bg-slate-800 focus:outline-none text-slate-300 hover:text-white" id="nav-dashboard">
+                    <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
+                </button>
+                <button onclick="router('students')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-colors hover:bg-slate-800 focus:outline-none text-slate-300 hover:text-white" id="nav-students">
+                    <i class="fa-solid fa-users w-5"></i> Students
+                </button>
+                <button onclick="router('fees')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-colors hover:bg-slate-800 focus:outline-none text-slate-300 hover:text-white" id="nav-fees">
+                    <i class="fa-solid fa-indian-rupee-sign w-5"></i> Fee Collection
+                </button>
+                <button onclick="router('expenses')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-colors hover:bg-slate-800 focus:outline-none text-slate-300 hover:text-white" id="nav-expenses">
+                    <i class="fa-solid fa-file-invoice-dollar w-5"></i> Expenses
+                </button>
+                <button onclick="router('staff')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-colors hover:bg-slate-800 focus:outline-none text-slate-300 hover:text-white" id="nav-staff">
+                    <i class="fa-solid fa-chalkboard-user w-5"></i> Staff
+                </button>
+                <button onclick="router('reports')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-colors hover:bg-slate-800 focus:outline-none text-slate-300 hover:text-white" id="nav-reports">
+                    <i class="fa-solid fa-chart-line w-5"></i> Reports
+                </button>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-slate-700">
+            <button onclick="backupData()" class="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-md text-sm transition-colors mb-2">
+                <i class="fa-solid fa-download"></i> Backup Data
+            </button>
+            <div class="text-xs text-center text-slate-500">
+                &copy; 2024 IQRA Classes
+            </div>
+        </div>
+    </aside>
+
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto h-full pt-16 md:pt-0 bg-gray-50 relative">
+        <div class="max-w-7xl mx-auto p-4 md:p-8">
+            
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="view-section fade-in">
+                <header class="mb-8 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
+                        <p class="text-gray-500">Welcome back to IQRA Management</p>
+                    </div>
+                    <div class="text-right hidden sm:block">
+                        <p class="text-sm text-gray-500" id="current-date">Monday, 01 Jan 2024</p>
+                    </div>
+                </header>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Students</p>
+                                <h3 class="text-2xl font-bold text-gray-800 mt-1" id="dash-total-students">0</h3>
+                            </div>
+                            <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
+                                <i class="fa-solid fa-user-graduate"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Monthly Income</p>
+                                <h3 class="text-2xl font-bold text-gray-800 mt-1" id="dash-income">₹0</h3>
+                            </div>
+                            <div class="p-2 bg-green-50 rounded-lg text-green-600">
+                                <i class="fa-solid fa-arrow-trend-up"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Monthly Expense</p>
+                                <h3 class="text-2xl font-bold text-gray-800 mt-1" id="dash-expense">₹0</h3>
+                            </div>
+                            <div class="p-2 bg-red-50 rounded-lg text-red-600">
+                                <i class="fa-solid fa-arrow-trend-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Net Profit</p>
+                                <h3 class="text-2xl font-bold text-gray-800 mt-1" id="dash-profit">₹0</h3>
+                            </div>
+                            <div class="p-2 bg-purple-50 rounded-lg text-purple-600">
+                                <i class="fa-solid fa-wallet"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Table -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-800">Recent Transactions</h3>
+                        <button onclick="router('reports')" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View All</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-600">
+                            <thead class="bg-gray-50 text-gray-900 font-medium">
+                                <tr>
+                                    <th class="px-6 py-3">Date</th>
+                                    <th class="px-6 py-3">Description</th>
+                                    <th class="px-6 py-3">Category</th>
+                                    <th class="px-6 py-3 text-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dash-transactions-body" class="divide-y divide-gray-100">
+                                <!-- JS will populate this -->
+                                <tr>
+                                    <td colspan="4" class="px-6 py-8 text-center text-gray-400">No transactions found</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students View -->
+            <div id="view-students" class="view-section hidden fade-in">
+                <header class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Student Management</h2>
+                        <p class="text-gray-500">Manage admissions and student details</p>
+                    </div>
+                    <button onclick="openModal('modal-student')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Add Student
+                    </button>
+                </header>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50 flex gap-4">
+                        <div class="relative flex-1">
+                            <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                            <input type="text" id="search-student" onkeyup="renderStudentTable()" placeholder="Search by name, roll no..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-600">
+                            <thead class="bg-gray-100 text-gray-900 font-medium">
+                                <tr>
+                                    <th class="px-6 py-3">Roll No</th>
+                                    <th class="px-6 py-3">Name</th>
+                                    <th class="px-6 py-3">Class/Batch</th>
+                                    <th class="px-6 py-3">Contact</th>
+                                    <th class="px-6 py-3">Status</th>
+                                    <th class="px-6 py-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-table-body" class="divide-y divide-gray-100">
+                                <!-- JS Populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fees View -->
+            <div id="view-fees" class="view-section hidden fade-in">
+                <header class="mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Fee Collection</h2>
+                        <p class="text-gray-500">Record payments and generate receipts</p>
+                    </div>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Fee Form -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 lg:col-span-1">
+                        <h3 class="font-bold text-lg mb-4 text-gray-800">New Payment</h3>
+                        <form id="fee-form" onsubmit="handleFeeSubmit(event)">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Select Student</label>
+                                    <select id="fee-student-select" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
+                                        <option value="">Choose a student...</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
+                                    <input type="number" id="fee-amount" required min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" placeholder="0.00">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">For Month</label>
+                                    <select id="fee-month" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
+                                        <option value="January">January</option>
+                                        <option value="February">February</option>
+                                        <option value="March">March</option>
+                                        <option value="April">April</option>
+                                        <option value="May">May</option>
+                                        <option value="June">June</option>
+                                        <option value="July">July</option>
+                                        <option value="August">August</option>
+                                        <option value="September">September</option>
+                                        <option value="October">October</option>
+                                        <option value="November">November</option>
+                                        <option value="December">December</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                    <input type="date" id="fee-date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Payment Mode</label>
+                                    <select id="fee-mode" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
+                                        <option value="Cash">Cash</option>
+                                        <option value="UPI">UPI / Online</option>
+                                        <option value="Cheque">Cheque</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition-colors">
+                                    Record Payment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Fee History -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 lg:col-span-2 overflow-hidden flex flex-col h-[600px]">
+                        <div class="p-4 border-b border-gray-100 bg-gray-50">
+                            <h3 class="font-bold text-gray-800">Payment History</h3>
+                        </div>
+                        <div class="overflow-y-auto flex-1 p-0">
+                            <table class="w-full text-left text-sm text-gray-600">
+                                <thead class="bg-gray-100 text-gray-900 font-medium sticky top-0">
+                                    <tr>
+                                        <th class="px-6 py-3">Date</th>
+                                        <th class="px-6 py-3">Student</th>
+                                        <th class="px-6 py-3">Month</th>
+                                        <th class="px-6 py-3">Mode</th>
+                                        <th class="px-6 py-3 text-right">Amount</th>
+                                        <th class="px-6 py-3 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="fees-table-body" class="divide-y divide-gray-100">
+                                    <!-- JS Populated -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expenses View -->
+            <div id="view-expenses" class="view-section hidden fade-in">
+                <header class="mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Expense Tracker</h2>
+                        <p class="text-gray-500">Track institute spending</p>
+                    </div>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Expense Form -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 lg:col-span-1">
+                        <h3 class="font-bold text-lg mb-4 text-gray-800">Add Expense</h3>
+                        <form id="expense-form" onsubmit="handleExpenseSubmit(event)">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Title / Description</label>
+                                    <input type="text" id="exp-title" required placeholder="e.g. Electricity Bill" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                    <select id="exp-category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+                                        <option value="Rent">Rent</option>
+                                        <option value="Salary">Staff Salary</option>
+                                        <option value="Utilities">Utilities (Bill, Water)</option>
+                                        <option value="Maintenance">Maintenance</option>
+                                        <option value="Stationery">Stationery</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
+                                    <input type="number" id="exp-amount" required min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" placeholder="0.00">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                    <input type="date" id="exp-date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+                                </div>
+                                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition-colors">
+                                    Record Expense
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Expense History -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 lg:col-span-2 overflow-hidden flex flex-col h-[500px]">
+                        <div class="p-4 border-b border-gray-100 bg-gray-50">
+                            <h3 class="font-bold text-gray-800">Expense History</h3>
+                        </div>
+                        <div class="overflow-y-auto flex-1">
+                            <table class="w-full text-left text-sm text-gray-600">
+                                <thead class="bg-gray-100 text-gray-900 font-medium sticky top-0">
+                                    <tr>
+                                        <th class="px-6 py-3">Date</th>
+                                        <th class="px-6 py-3">Description</th>
+                                        <th class="px-6 py-3">Category</th>
+                                        <th class="px-6 py-3 text-right">Amount</th>
+                                        <th class="px-6 py-3 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="expenses-table-body" class="divide-y divide-gray-100">
+                                    <!-- JS Populated -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staff View -->
+            <div id="view-staff" class="view-section hidden fade-in">
+                <header class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Staff Management</h2>
+                        <p class="text-gray-500">Teachers and support staff</p>
+                    </div>
+                    <button onclick="openModal('modal-staff')" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Add Staff
+                    </button>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="staff-grid">
+                    <!-- Staff cards generated by JS -->
+                </div>
+            </div>
+
+            <!-- Reports View -->
+            <div id="view-reports" class="view-section hidden fade-in">
+                <header class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Financial Reports</h2>
+                    <p class="text-gray-500">Visual overview of your coaching institute</p>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="font-bold text-gray-700 mb-4">Income vs Expenses (This Year)</h3>
+                        <canvas id="financeChart"></canvas>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="font-bold text-gray-700 mb-4">Expenses by Category</h3>
+                        <canvas id="expenseCategoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modals -->
+
+    <!-- Add Student Modal -->
+    <div id="modal-student" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-lg text-gray-800">Add New Student</h3>
+                <button onclick="closeModal('modal-student')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="add-student-form" onsubmit="handleAddStudent(event)" class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Full Name</label>
+                        <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Roll No</label>
+                        <input type="text" name="roll" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Class / Batch</label>
+                    <input type="text" name="batch" required placeholder="e.g. 10th Science" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Phone Number</label>
+                    <input type="tel" name="phone" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Address</label>
+                    <textarea name="address" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                </div>
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">Save Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Staff Modal -->
+    <div id="modal-staff" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-lg text-gray-800">Add Staff Member</h3>
+                <button onclick="closeModal('modal-staff')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="add-staff-form" onsubmit="handleAddStaff(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Full Name</label>
+                    <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Role / Position</label>
+                    <select name="role" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none">
+                        <option value="Teacher">Teacher</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Cleaner">Cleaner</option>
+                        <option value="Security">Security</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Phone</label>
+                    <input type="tel" name="phone" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Monthly Salary (₹)</label>
+                    <input type="number" name="salary" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none">
+                </div>
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">Save Staff</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- State Management ---
+        const DB_KEY = 'iqra_data_v1';
+        let db = {
+            students: [],
+            fees: [],
+            expenses: [],
+            staff: []
+        };
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            if(document.getElementById('fee-date')) document.getElementById('fee-date').value = today;
+            if(document.getElementById('exp-date')) document.getElementById('exp-date').value = today;
+            
+            // Set current date in header
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            router('dashboard'); // Default view
+        });
+
+        // --- Data Persistence ---
+        function loadData() {
+            const saved = localStorage.getItem(DB_KEY);
+            if (saved) {
+                db = JSON.parse(saved);
+            }
+            refreshAll();
+        }
+
+        function saveData() {
+            localStorage.setItem(DB_KEY, JSON.stringify(db));
+            refreshAll();
+        }
+
+        function backupData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "iqra_backup_" + new Date().toISOString().split('T')[0] + ".json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        // --- Router ---
+        function router(viewName) {
+            // Hide all views
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            // Show selected view
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            
+            // Update sidebar active state
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-slate-800', 'text-white');
+                el.classList.add('text-slate-300');
+            });
+            const activeNav = document.getElementById(`nav-${viewName}`);
+            if(activeNav) {
+                activeNav.classList.add('bg-slate-800', 'text-white');
+                activeNav.classList.remove('text-slate-300');
+            }
+
+            // Mobile sidebar logic
+            if(window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+
+            // View specific refreshes
+            if(viewName === 'reports') renderCharts();
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function refreshAll() {
+            updateDashboardStats();
+            renderStudentTable();
+            populateStudentSelect();
+            renderFeeTable();
+            renderExpenseTable();
+            renderStaffGrid();
+        }
+
+        // --- Dashboard Logic ---
+        function updateDashboardStats() {
+            // Counts
+            document.getElementById('dash-total-students').textContent = db.students.length;
+            
+            // Financials for current month
+            const currentMonthIndex = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+
+            let income = 0;
+            db.fees.forEach(f => {
+                const d = new Date(f.date);
+                if(d.getMonth() === currentMonthIndex && d.getFullYear() === currentYear) {
+                    income += parseFloat(f.amount);
+                }
+            });
+
+            let expense = 0;
+            db.expenses.forEach(e => {
+                const d = new Date(e.date);
+                if(d.getMonth() === currentMonthIndex && d.getFullYear() === currentYear) {
+                    expense += parseFloat(e.amount);
+                }
+            });
+
+            document.getElementById('dash-income').textContent = `₹${income.toLocaleString()}`;
+            document.getElementById('dash-expense').textContent = `₹${expense.toLocaleString()}`;
+            document.getElementById('dash-profit').textContent = `₹${(income - expense).toLocaleString()}`;
+
+            // Recent Transactions (Combine Fees and Expenses)
+            const transactions = [
+                ...db.fees.map(f => ({ ...f, type: 'Fee', category: 'Fee Collection', desc: `Fee from ${getStudentName(f.studentId)}` })),
+                ...db.expenses.map(e => ({ ...e, type: 'Expense', desc: e.title }))
+            ].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+
+            const tbody = document.getElementById('dash-transactions-body');
+            if(transactions.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-gray-400">No recent transactions</td></tr>`;
+            } else {
+                tbody.innerHTML = transactions.map(t => `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-3 text-gray-500">${new Date(t.date).toLocaleDateString()}</td>
+                        <td class="px-6 py-3 font-medium text-gray-800">${t.desc}</td>
+                        <td class="px-6 py-3">
+                            <span class="px-2 py-1 text-xs rounded-full ${t.type === 'Fee' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                                ${t.category || 'Expense'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3 text-right font-bold ${t.type === 'Fee' ? 'text-green-600' : 'text-red-600'}">
+                            ${t.type === 'Fee' ? '+' : '-'} ₹${parseFloat(t.amount).toLocaleString()}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // --- Students Logic ---
+        function handleAddStudent(e) {
+            e.preventDefault();
+            const form = e.target;
+            const newStudent = {
+                id: Date.now().toString(),
+                name: form.name.value,
+                roll: form.roll.value,
+                batch: form.batch.value,
+                phone: form.phone.value,
+                address: form.address.value,
+                status: 'Active',
+                joined: new Date().toISOString()
+            };
+            db.students.push(newStudent);
+            saveData();
+            closeModal('modal-student');
+            form.reset();
+            alert('Student added successfully!');
+        }
+
+        function renderStudentTable() {
+            const search = document.getElementById('search-student')?.value.toLowerCase() || '';
+            const tbody = document.getElementById('students-table-body');
+            
+            const filtered = db.students.filter(s => 
+                s.name.toLowerCase().includes(search) || 
+                s.roll.toLowerCase().includes(search) ||
+                s.batch.toLowerCase().includes(search)
+            );
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400">No students found</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(s => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 font-mono text-xs text-gray-500">${s.roll}</td>
+                    <td class="px-6 py-4 font-bold text-gray-800">${s.name}</td>
+                    <td class="px-6 py-4 text-gray-600">${s.batch}</td>
+                    <td class="px-6 py-4 text-gray-600">${s.phone}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">Active</span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="deleteStudent('${s.id}')" class="text-red-500 hover:text-red-700 transition-colors">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function deleteStudent(id) {
+            if(confirm('Are you sure? This will remove the student but keep their financial records.')) {
+                db.students = db.students.filter(s => s.id !== id);
+                saveData();
+            }
+        }
+
+        function getStudentName(id) {
+            const s = db.students.find(x => x.id === id);
+            return s ? s.name : 'Unknown Student';
+        }
+
+        // --- Fees Logic ---
+        function populateStudentSelect() {
+            const select = document.getElementById('fee-student-select');
+            if(!select) return;
+            select.innerHTML = `<option value="">Choose a student...</option>` + 
+                db.students.map(s => `<option value="${s.id}">${s.name} (${s.roll}) - ${s.batch}</option>`).join('');
+        }
+
+        function handleFeeSubmit(e) {
+            e.preventDefault();
+            const studentId = document.getElementById('fee-student-select').value;
+            if(!studentId) { alert('Please select a student'); return; }
+
+            const newFee = {
+                id: Date.now().toString(),
+                studentId: studentId,
+                amount: document.getElementById('fee-amount').value,
+                month: document.getElementById('fee-month').value,
+                date: document.getElementById('fee-date').value,
+                mode: document.getElementById('fee-mode').value
+            };
+            db.fees.push(newFee);
+            saveData();
+            document.getElementById('fee-amount').value = '';
+            alert('Fee Recorded!');
+        }
+
+        function renderFeeTable() {
+            const tbody = document.getElementById('fees-table-body');
+            const sorted = [...db.fees].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if(sorted.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400">No fee records found</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = sorted.map(f => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-3 text-gray-500">${new Date(f.date).toLocaleDateString()}</td>
+                    <td class="px-6 py-3 font-medium text-gray-800">${getStudentName(f.studentId)}</td>
+                    <td class="px-6 py-3 text-gray-600">${f.month}</td>
+                    <td class="px-6 py-3 text-xs text-gray-500 uppercase">${f.mode}</td>
+                    <td class="px-6 py-3 text-right font-bold text-green-600">₹${parseFloat(f.amount).toLocaleString()}</td>
+                    <td class="px-6 py-3 text-right">
+                        <button onclick="deleteFee('${f.id}')" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function deleteFee(id) {
+            if(confirm('Delete this fee record?')) {
+                db.fees = db.fees.filter(f => f.id !== id);
+                saveData();
+            }
+        }
+
+        // --- Expenses Logic ---
+        function handleExpenseSubmit(e) {
+            e.preventDefault();
+            const newExp = {
+                id: Date.now().toString(),
+                title: document.getElementById('exp-title').value,
+                category: document.getElementById('exp-category').value,
+                amount: document.getElementById('exp-amount').value,
+                date: document.getElementById('exp-date').value
+            };
+            db.expenses.push(newExp);
+            saveData();
+            document.getElementById('exp-title').value = '';
+            document.getElementById('exp-amount').value = '';
+            alert('Expense Recorded!');
+        }
+
+        function renderExpenseTable() {
+            const tbody = document.getElementById('expenses-table-body');
+            const sorted = [...db.expenses].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if(sorted.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">No expenses recorded</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = sorted.map(e => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-3 text-gray-500">${new Date(e.date).toLocaleDateString()}</td>
+                    <td class="px-6 py-3 font-medium text-gray-800">${e.title}</td>
+                    <td class="px-6 py-3"><span class="bg-red-50 text-red-700 px-2 py-1 rounded-md text-xs">${e.category}</span></td>
+                    <td class="px-6 py-3 text-right font-bold text-red-600">₹${parseFloat(e.amount).toLocaleString()}</td>
+                    <td class="px-6 py-3 text-right">
+                        <button onclick="deleteExpense('${e.id}')" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function deleteExpense(id) {
+            if(confirm('Delete this expense?')) {
+                db.expenses = db.expenses.filter(e => e.id !== id);
+                saveData();
+            }
+        }
+
+        // --- Staff Logic ---
+        function handleAddStaff(e) {
+            e.preventDefault();
+            const form = e.target;
+            const newStaff = {
+                id: Date.now().toString(),
+                name: form.name.value,
+                role: form.role.value,
+                phone: form.phone.value,
+                salary: form.salary.value,
+                joined: new Date().toISOString()
+            };
+            db.staff.push(newStaff);
+            saveData();
+            closeModal('modal-staff');
+            form.reset();
+        }
+
+        function renderStaffGrid() {
+            const grid = document.getElementById('staff-grid');
+            if(db.staff.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center text-gray-400 py-10">No staff members added</div>`;
+                return;
+            }
+
+            grid.innerHTML = db.staff.map(s => `
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center text-center relative hover:shadow-md transition-shadow">
+                    <button onclick="deleteStaff('${s.id}')" class="absolute top-4 right-4 text-gray-300 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    <div class="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4">
+                        ${s.name.charAt(0)}
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-lg">${s.name}</h3>
+                    <p class="text-purple-600 text-sm font-medium mb-2">${s.role}</p>
+                    <div class="w-full border-t border-gray-100 my-3 pt-3 flex justify-between text-sm text-gray-600">
+                        <span><i class="fa-solid fa-phone mr-1"></i> ${s.phone}</span>
+                        <span>₹${parseInt(s.salary).toLocaleString()}/mo</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteStaff(id) {
+            if(confirm('Remove this staff member?')) {
+                db.staff = db.staff.filter(s => s.id !== id);
+                saveData();
+            }
+        }
+
+        // --- Modal Logic ---
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // --- Charts Logic ---
+        let financeChart = null;
+        let expenseChart = null;
+
+        function renderCharts() {
+            // Data Prep
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const incomeData = new Array(12).fill(0);
+            const expenseData = new Array(12).fill(0);
+            const currentYear = new Date().getFullYear();
+
+            db.fees.forEach(f => {
+                const d = new Date(f.date);
+                if(d.getFullYear() === currentYear) incomeData[d.getMonth()] += parseFloat(f.amount);
+            });
+            db.expenses.forEach(e => {
+                const d = new Date(e.date);
+                if(d.getFullYear() === currentYear) expenseData[d.getMonth()] += parseFloat(e.amount);
+            });
+
+            // Expense Categories
+            const categories = {};
+            db.expenses.forEach(e => {
+                categories[e.category] = (categories[e.category] || 0) + parseFloat(e.amount);
+            });
+
+            // Render Income vs Expense
+            const ctx1 = document.getElementById('financeChart').getContext('2d');
+            if(financeChart) financeChart.destroy();
+            financeChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [
+                        { label: 'Income', data: incomeData, backgroundColor: '#22c55e', borderRadius: 4 },
+                        { label: 'Expenses', data: expenseData, backgroundColor: '#ef4444', borderRadius: 4 }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // Render Expense Category
+            const ctx2 = document.getElementById('expenseCategoryChart').getContext('2d');
+            if(expenseChart) expenseChart.destroy();
+            expenseChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(categories),
+                    datasets: [{
+                        data: Object.values(categories),
+                        backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#eab308', '#14b8a6', '#6366f1']
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'right' } } }
+            });
+        }
+    </script>
+</body>
+</html>
